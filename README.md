@@ -119,16 +119,93 @@ Rust 来重新实现 ClickHouse，几个关键步骤来构建一个高性能、�
 ```text
 rust-clickhouse/
 │
-├── src/                      # 源代码目录
-│   ├── storage/              # 存储引擎相关代码
-│   ├── sql/                  # SQL 解析和执行引擎
-│   ├── query/                # 查询执行与优化
-│   ├── distributed/          # 分布式系统与容错
-│   ├── compression/          # 压缩与存储格式
-│   ├── transaction/          # 事务与并发控制（MVCC）
-│   └── utils/                # 工具和通用功能
+├── src/                            # 源代码目录
+│   ├── storage/                    # 存储引擎相关代码
+│   │   ├── mod.rs                  # 存储模块的入口
+│   │   ├── engine.rs               # 存储引擎的实现（例如基于列存或行存）
+│   │   ├── block.rs                # 存储数据块的定义和处理
+│   │   ├── file.rs                 # 文件存储操作（包括读写）
+│   │   ├── index.rs                # 索引结构和操作（如 B+ 树）
+│   │   └── partition.rs            # 分区管理（例如数据分区）
+│   │
+│   ├── sql/                        # SQL 解析和执行引擎
+│   │   ├── mod.rs                  # SQL 模块的入口
+│   │   ├── parser.rs               # SQL 解析（语法分析）
+│   │   ├── lexer.rs                # SQL 词法分析器
+│   │   ├── executor.rs             # SQL 执行器（执行计划生成与执行）
+│   │   ├── planner.rs              # 查询计划生成
+│   │   └── optimizer.rs            # 查询优化器（对查询计划进行优化）
+│   │
+│   ├── query/                      # 查询执行与优化
+│   │   ├── mod.rs                  # 查询模块的入口
+│   │   ├── executor.rs             # 查询执行器
+│   │   ├── optimizer.rs            # 查询优化器（逻辑和物理优化）
+│   │   ├── plan.rs                # 查询计划的定义
+│   │   ├── parser.rs               # 查询解析（从 SQL 到查询计划）
+│   │   └── statistics.rs           # 查询优化时的统计信息（如基数估计）
+│   │
+│   ├── distributed/                # 分布式系统与容错
+│   │   ├── mod.rs                  # 分布式模块的入口
+│   │   ├── coordinator.rs          # 协调器（任务分配与调度）
+│   │   ├── replica.rs              # 副本管理（分布式一致性）
+│   │   ├── network.rs              # 网络通信（节点间通信协议）
+│   │   ├── sharding.rs             # 分片策略与实现
+│   │   └── fault_tolerance.rs      # 容错与恢复机制
+│   │
+│   ├── compression/                # 压缩与存储格式
+│   │   ├── mod.rs                  # 压缩模块的入口
+│   │   ├── codec.rs                # 数据压缩与解压缩算法（如 LZ4, ZSTD）
+│   │   ├── format.rs               # 存储格式（例如 Parquet, ORC）
+│   │   └── block_compression.rs    # 数据块压缩与解压
+│   │
+│   ├── transaction/                # 事务与并发控制（MVCC）
+│   │   ├── mod.rs                  # 事务模块的入口
+│   │   ├── mvcc.rs                 # MVCC（多版本并发控制）的实现
+│   │   ├── txn.rs                  # 事务管理（开始、提交、回滚等）
+│   │   ├── isolation.rs            # 隔离级别与锁管理（读写锁、乐观锁等）
+│   │   └── concurrency.rs          # 并发控制与锁的管理
+│   │
+│   ├── utils/                      # 工具和通用功能
+│   │   ├── mod.rs                  # 工具模块的入口
+│   │   ├── logger.rs               # 日志记录（比如日志级别、格式化输出）
+│   │   ├── config.rs               # 配置管理（读取配置文件）
+│   │   ├── helper.rs               # 辅助函数（如时间戳生成、转换等）
+│   │   ├── async_util.rs           # 异步工具（如果需要使用异步编程）
+│   │   └── memory.rs               # 内存管理（如内存池、对象池等）
 │
-├── examples/                 # 示例代码
-├── tests/                    # 单元测试
-├── Cargo.toml                # 项目的依赖和配置
-└── README.md                 # 项目文档
+├── examples/                       # 示例代码
+│   ├── simple_query.rs             # 简单查询示例
+│   ├── distributed_example.rs      # 分布式查询示例
+│   └── compression_example.rs      # 压缩存储示例
+│
+├── tests/                          # 单元测试
+│   ├── storage/                    # 存储引擎相关的单元测试
+│   │   ├── mod.rs                  # 存储模块的测试入口
+│   │   ├── engine_test.rs          # 存储引擎相关的测试
+│   │   └── block_test.rs           # 数据块存储相关的测试
+│   ├── sql/                        # SQL 解析和执行相关的测试
+│   │   ├── mod.rs                  # SQL 模块的测试入口
+│   │   ├── parser_test.rs          # SQL 解析的单元测试
+│   │   └── executor_test.rs        # 执行器的单元测试
+│   ├── query/                      # 查询执行与优化相关的测试
+│   │   ├── mod.rs                  # 查询模块的测试入口
+│   │   ├── executor_test.rs        # 查询执行器的测试
+│   │   └── optimizer_test.rs       # 查询优化器的测试
+│   ├── distributed/                # 分布式系统相关的测试
+│   │   ├── mod.rs                  # 分布式模块的测试入口
+│   │   └── network_test.rs         # 网络通信相关的单元测试
+│   ├── compression/                # 压缩与存储格式相关的测试
+│   │   ├── mod.rs                  # 压缩模块的测试入口
+│   │   └── codec_test.rs           # 压缩和解压的单元测试
+│   ├── transaction/                # 事务和并发控制相关的测试
+│   │   ├── mod.rs                  # 事务模块的测试入口
+│   │   └── mvcc_test.rs            # MVCC 实现的测试
+│   └── utils/                      # 工具函数相关的测试
+│       ├── mod.rs                  # 工具模块的测试入口
+│       └── logger_test.rs          # 日志功能的单元测试
+│
+├── Cargo.toml                      # 项目的依赖和配置
+├── README.md                       # 项目文档
+├── LICENSE                         # 项目的许可证
+└── .gitignore                      # Git 忽略文件
+
