@@ -206,6 +206,6 @@ rust-clickhouse/
 │
 ├── Cargo.toml                      # 项目的依赖和配置
 ├── README.md                       # 项目文档
-├── LICENSE                         # 项目的许可证
-└── .gitignore                      # Git 忽略文件
+├── LICENSE                         
+└── .gitignore                      
 
